@@ -1,0 +1,27 @@
+# Virtual Environment
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment Variables
+.env
+
+# Database Data / Graph caches
+data/processed/
+
+# Datasets
+# Ignore everything in the data folders
+IDP_APMC_NEW/*
+IDP_APMC_OLD/*
+Kaggle_2001-2026_Dataset/*
+Kaggle_Important_Crops_Dataset_2023-2025/*
+data/raw/*
+
+# BUT explicitly include the filtered dataset
+!IDP_APMC_NEW/filtered_perishables.csv
+
+# Agent/IDE logs
+.agents/
+.gemini/

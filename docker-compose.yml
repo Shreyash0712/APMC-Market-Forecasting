@@ -1,0 +1,37 @@
+services:
+  timescaledb:
+    # The timescale/timescaledb-ha image comes pre-configured with PostGIS, 
+    # pgBouncer, and other extensions needed for production-grade workloads.
+    image: timescale/timescaledb-ha:pg15-latest
+    container_name: apmc_timescaledb
+    environment:
+      - POSTGRES_DB=apmc_forecasting
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/home/postgres/pgdata/data
+      - ./db_init:/docker-entrypoint-initdb.d 
+    command: postgres -c max_connections=200 -c shared_buffers=1GB -c work_mem=32MB
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apmc_admin -d apmc_forecasting"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: apmc_pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@apmc.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - timescaledb
+    restart: unless-stopped
+
+volumes:
+  timescaledb_data:
