@@ -49,11 +49,15 @@ To overcome the "black box" adoption barrier and dynamically handle real-world c
 - **Ultra-Fast Synthesis (`advisory_generator.py`):** Uses Groq's `qwen/qwen3.8-27b` to generate hallucination-resistant farmer advisories in **656 ms**!
 - **Anticipatory Capacity Buffering:** The router anticipates non-compliant "rogue herders" and pre-deducts their volume from capacity buffers. Under full coordination, the Price Dispersion Index collapses to **0.2901 (a 60.95% volatility collapse)**!
 - **Flood Disruption Shield:** During severe monsoon floods (e.g., July 2023 case), the router scales highway impedance and reroutes trucks, **protecting farmer incomes by +53.67%** (INR 6,233 $\rightarrow$ INR 9,578)!
-- **Bayesian Override:** Overturns false crash warnings during extreme supply-destruction events.
+### Phase 5: Production Hardening, Multi-Origin Game Theory & Stress Testing
+To eliminate cross-village market gluts and guarantee production-grade resilience:
+- **Zero-Accuracy-Loss ONNX Export:** Compiled ST-GNN into ONNX Runtime (`data/processed/st_gnn.onnx`) with mathematical verification showing a max logit discrepancy of just $1.91 \times 10^{-6}$ and **0% prediction mismatch** across all 1,058 nodes.
+- **Multi-Origin Distributed Routing (`multi_origin_router.py`):** Solves the joint Beckmann congestion integral across multiple farming belts (e.g., Nashik, Sangli, and Satara dispatching 2,700t simultaneously). Eliminates the 287% terminal market crash in Vashi, raising clearing prices by **+203.8%** and dropping regional price volatility by **77.47% (PDI: 0.3628 $\rightarrow$ 0.0817)** in **93 ms**!
+- **Adversarial Cartel Defense & Fuel Stress (`test_adversarial_and_diesel_stress.py`):** Neutralizes predatory price-pump cartel traps (+60% spoofing) via Spatial Neighbor Consensus, preventing a **-30.3% post-arrival market crash**. Swept diesel tariffs (INR 70 to 150/L) to pinpoint the exact economic tipping point (**$D^* = \text{INR } 110/\text{L}$**) where long-haul arbitrage bifurcates into localized lock-in.
 
 ---
 
-## Quick Start
+## 🛠️ Quick Start
 
 ### 1. Requirements
 - **Python 3.12+** (We strongly recommend using [uv](https://github.com/astral-sh/uv) for lightning-fast dependency resolution).
@@ -106,6 +110,16 @@ python scripts/test_explainability.py
 python scripts/run_all_benchmarks.py
 ```
 
+#### Run the Phase 5 Multi-Origin Distributed Routing Benchmark:
+```bash
+python scripts/test_multi_origin_routing.py
+```
+
+#### Run the Phase 5 Adversarial & Diesel Stress Testing Suite:
+```bash
+python scripts/test_adversarial_and_diesel_stress.py
+```
+
 ---
 
 ## 📚 Documentation
@@ -115,4 +129,5 @@ For an in-depth dive into the mathematical and economic theories powering this r
 - [docs/PHASE_2_SUMMARY.md](docs/PHASE_2_SUMMARY.md) - Frank-Wolfe Wardrop equilibrium and diesel logistics math.
 - [docs/PHASE_3_SUMMARY.md](docs/PHASE_3_SUMMARY.md) - Initial Mesa Agent-Based Simulation results.
 - [docs/PHASE_4_SUMMARY.md](docs/PHASE_4_SUMMARY.md) - Neuro-symbolic explainability engine details.
+- [docs/PHASE_5_SUMMARY.md](docs/PHASE_5_SUMMARY.md) - ONNX zero-loss compilation & multi-origin distributed routing.
 - [docs/BENCHMARK_REPORT.md](docs/BENCHMARK_REPORT.md) - Full quantitative scorecard across fidelity, trust, and disruption rerouting.

@@ -22,21 +22,24 @@ CURRENT_DIESEL_PRICE = float(os.environ.get("CURRENT_DIESEL_PRICE", 90.0))
 TRUCK_MILEAGE_KMPL = float(os.environ.get("TRUCK_MILEAGE_KMPL", 15.0))
 BASE_LOADING_CHARGE = float(os.environ.get("BASE_LOADING_CHARGE", 500.0))
 
-def calculate_transport_cost(distance_km, volume_tonnes):
-    # Freight rate is now completely dynamically pegged to fuel costs
+def calculate_transport_cost(distance_km, volume_tonnes, diesel_price=None, truck_mileage=None):
+    # Freight rate is dynamically pegged to fuel costs
     # Fuel cost per km = Diesel Price / Mileage
     # Total trip cost = Fuel cost per km * distance
-    fuel_cost_per_km = CURRENT_DIESEL_PRICE / TRUCK_MILEAGE_KMPL
+    fuel_price = CURRENT_DIESEL_PRICE if diesel_price is None else float(diesel_price)
+    mileage = TRUCK_MILEAGE_KMPL if truck_mileage is None else float(truck_mileage)
+    fuel_cost_per_km = fuel_price / max(0.5, mileage)
     trip_fuel_cost = fuel_cost_per_km * distance_km
     
     # We assume the fuel cost scales with the tonnes (1 tonne = 1 standard truck equivalent for simple math)
     return BASE_LOADING_CHARGE + (trip_fuel_cost * volume_tonnes)
 
-def inverse_demand_function(base_price, allocated_volume, baseline_capacity, elasticity=ELASTICITY_COEFFICIENT):
+def inverse_demand_function(base_price, allocated_volume, baseline_capacity, elasticity=None):
     """
     Simulates a price crash if the allocated volume exceeds the mandi's capacity.
     If allocated_volume > baseline_capacity, price drops exponentially based on elasticity.
     """
+    gamma = ELASTICITY_COEFFICIENT if elasticity is None else float(elasticity)
     # If supply is within capacity, price holds. If it exceeds, it drops.
     utilization = allocated_volume / (baseline_capacity + 1e-6)
     
@@ -45,10 +48,11 @@ def inverse_demand_function(base_price, allocated_volume, baseline_capacity, ela
     else:
         # Price drops rapidly as utilization exceeds 1.0
         # P = P0 * exp(-elasticity * (utilization - 1))
-        return base_price * np.exp(-elasticity * (utilization - 1.0))
+        return base_price * np.exp(-gamma * (utilization - 1.0))
 
 def compute_net_payoff(predicted_price_per_tonne, distance_km, volume_tonnes, 
-                       allocated_volume, baseline_capacity, apmc_fee_rate):
+                       allocated_volume, baseline_capacity, apmc_fee_rate,
+                       elasticity=None, diesel_price=None, truck_mileage=None):
     """
     Calculates the final net realization per tonne for the farmer.
     """
@@ -61,7 +65,8 @@ def compute_net_payoff(predicted_price_per_tonne, distance_km, volume_tonnes,
     clearing_price = inverse_demand_function(
         base_price=predicted_price_per_tonne,
         allocated_volume=allocated_volume,
-        baseline_capacity=baseline_capacity
+        baseline_capacity=baseline_capacity,
+        elasticity=elasticity
     )
     
     # 3. Deduct state-specific APMC ad-valorem taxes and commission (applied to remaining volume)
@@ -69,7 +74,7 @@ def compute_net_payoff(predicted_price_per_tonne, distance_km, volume_tonnes,
     net_after_tax = gross_realization * (1.0 - apmc_fee_rate)
     
     # 4. Deduct physical transport costs (freight is charged on original shipped volume)
-    transport_cost = calculate_transport_cost(distance_km, volume_tonnes)
+    transport_cost = calculate_transport_cost(distance_km, volume_tonnes, diesel_price=diesel_price, truck_mileage=truck_mileage)
     
     net_profit = net_after_tax - transport_cost
     

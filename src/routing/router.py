@@ -12,11 +12,14 @@ import os
 import psycopg2
 from dotenv import load_dotenv
 from src.routing.frank_wolfe import compute_wardrop_equilibrium
+from src.routing.adversarial_defense import CartelAnomalyDetector
 
 class GameTheoreticRouter:
-    def __init__(self, state="DEFAULT"):
+    def __init__(self, state="DEFAULT", enable_adversarial_defense=False, divergence_threshold=0.35):
         self.state = state
         self.state_fee_rate = self._fetch_state_fee_from_db(state)
+        self.enable_adversarial_defense = enable_adversarial_defense
+        self.detector = CartelAnomalyDetector(divergence_threshold=divergence_threshold)
         
     def _fetch_state_fee_from_db(self, state_name):
         """Fetches the latest gazetted APMC tax rate for the state from TimescaleDB."""
@@ -44,10 +47,12 @@ class GameTheoreticRouter:
         
     def generate_recommendation(self, mandi_names, predicted_prices, distances, 
                               total_village_volume, baseline_capacities,
-                              adherence_rate=1.0, disruptions=None):
+                              adherence_rate=1.0, disruptions=None,
+                              spatial_weights=None, diesel_price=None, elasticity=None,
+                              truck_mileage=None, return_defense_diagnostics=False):
         """
-        Calculates the Wardrop User Equilibrium with anticipatory compliance buffering
-        and real-time exogenous disruption impedance.
+        Calculates the Wardrop User Equilibrium with anticipatory compliance buffering,
+        real-time exogenous disruption impedance, and adversarial cartel defense.
         
         Args:
             mandi_names (list): Names of candidate destination mandis.
@@ -57,14 +62,24 @@ class GameTheoreticRouter:
             baseline_capacities (list/array): Organic daily capacity of each mandi.
             adherence_rate (float): Estimated fraction of farmers complying (0.0 to 1.0).
             disruptions (dict): Optional {mandi_name: {'road_accessibility': float, 'supply_disruption': float}}.
+            spatial_weights (np.ndarray): Optional [M, M] spatial adjacency weights for cartel anomaly detection.
+            diesel_price (float): Optional diesel price in INR/L.
+            elasticity (float): Optional price flexibility elasticity coefficient.
+            return_defense_diagnostics (bool): Whether to return anomaly detection metrics.
             
         Returns:
-            dict: Mapping of {mandi_name: percentage_allocation} for compliant farmers.
+            dict or tuple: Mapping of {mandi_name: percentage_allocation}, optionally with defense diagnostics.
         """
         # Convert to numpy arrays
         predicted_prices = np.array(predicted_prices, dtype=np.float64)
         distances = np.array(distances, dtype=np.float64)
         capacities = np.array(baseline_capacities, dtype=np.float64)
+        
+        # 0. Adversarial Cartel Defense (Spatial Graph Consensus)
+        defense_diagnostics = None
+        if self.enable_adversarial_defense and spatial_weights is not None:
+            defense_diagnostics = self.detector.evaluate_spatial_consensus(predicted_prices, spatial_weights)
+            predicted_prices = defense_diagnostics["sanitized_prices"]
         
         # 1. Apply Exogenous Disruption Penalties (Road Accessibility & Floods)
         if disruptions:
@@ -97,7 +112,10 @@ class GameTheoreticRouter:
             baseline_capacities=capacities,
             apmc_fee_rate=self.state_fee_rate,
             max_iter=200,
-            tol=1e-5
+            tol=1e-5,
+            elasticity=elasticity,
+            diesel_price=diesel_price,
+            truck_mileage=truck_mileage
         )
         
         # Format the output as a percentage allocation for compliant farmers
@@ -106,4 +124,7 @@ class GameTheoreticRouter:
             if optimal_split[i] > 0.01:
                 routing_allocation[name] = round(float(optimal_split[i]) * 100, 2)
                 
+        if return_defense_diagnostics:
+            return routing_allocation, defense_diagnostics
+            
         return routing_allocation

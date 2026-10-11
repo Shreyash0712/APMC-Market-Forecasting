@@ -22,7 +22,7 @@ def linear_minimization_oracle(current_payoffs):
     s[best_mandi_idx] = 1.0
     return s
 
-def compute_wardrop_equilibrium(predicted_prices, distances, total_village_volume, baseline_capacities, apmc_fee_rate, max_iter=100, tol=1e-4):
+def compute_wardrop_equilibrium(predicted_prices, distances, total_village_volume, baseline_capacities, apmc_fee_rate, max_iter=100, tol=1e-4, elasticity=None, diesel_price=None, truck_mileage=None):
     """
     Executes the Frank-Wolfe algorithm to find the optimal stochastic routing distribution.
     
@@ -32,6 +32,11 @@ def compute_wardrop_equilibrium(predicted_prices, distances, total_village_volum
         total_village_volume (float): The total tonnes of crop waiting to be routed from the village.
         baseline_capacities (np.array): The organic daily capacity of the N mandis.
         apmc_fee_rate (float): The cached APMC fee decimal rate for the destination state.
+        max_iter (int): Maximum Frank-Wolfe iterations.
+        tol (float): Convergence tolerance.
+        elasticity (float, optional): Custom price flexibility elasticity.
+        diesel_price (float, optional): Custom diesel fuel price in INR/liter.
+        truck_mileage (float, optional): Custom truck fuel economy in km/L.
         
     Returns:
         np.array: The optimal probability split vector (x) across the N mandis.
@@ -52,7 +57,10 @@ def compute_wardrop_equilibrium(predicted_prices, distances, total_village_volum
                 volume_tonnes=1.0, # Evaluate marginal payoff per tonne
                 allocated_volume=allocated_vol,
                 baseline_capacity=baseline_capacities[i],
-                apmc_fee_rate=apmc_fee_rate
+                apmc_fee_rate=apmc_fee_rate,
+                elasticity=elasticity,
+                diesel_price=diesel_price,
+                truck_mileage=truck_mileage
             )
             
         # 2. Linear Minimization Oracle (Find best alternative route)
