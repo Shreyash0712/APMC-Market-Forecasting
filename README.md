@@ -33,7 +33,7 @@ graph TD
 
 ---
 
-## 🚀 Project Milestones & Statistics
+## Project Milestones & Statistics
 
 ### Phase 1: Spatio-Temporal GNN (ST-GNN)
 We built a PyTorch Geometric model utilizing **GATv2Conv** (Spatial Attention) and **Temporal Convolutional Networks** to detect early momentum indicators of impending price crashes across interconnected state markets.
@@ -54,7 +54,7 @@ To mathematically prove the routing engine stabilizes the macroeconomy, we insta
 
 ---
 
-## 🛠️ Quick Start
+## Quick Start
 
 ### 1. Requirements
 - **Python 3.12+** (We strongly recommend using [uv](https://github.com/astral-sh/uv) for lightning-fast dependency resolution).
