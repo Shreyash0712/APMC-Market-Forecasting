@@ -9,34 +9,67 @@ If an AI simply predicts that "Tomatoes will be highly profitable in Pune tomorr
 This repository solves the paradox via a comprehensive four-phase architecture:
 
 ```mermaid
-graph TD
-    subgraph Data Layer
-        A[TimescaleDB / PostGIS] --> B(Historical APMC Arrivals & Prices)
-    end
-    
-    subgraph Phase 1: Machine Learning
-        B --> C[Spatial Graph Construction]
-        C --> D[Spatio-Temporal GNN]
-        D -->|Forecasts Baseline Prices| E
-    end
-    
-    subgraph Phase 2: Game Theory
-        E[Frank-Wolfe Convex Optimizer]
-        E -->|Calculates Wardrop Equilibrium| F[Stochastic Routing API]
-    end
-    
-    subgraph Phase 3: Agent-Based Simulation
-        F -->|Yields Route Probabilities| G[Mesa ABM]
-        G -->|1,000 Synthetic Farmers acting on advice| H((Market Stabilizes))
+flowchart TB
+    %% Styling Classes
+    classDef dataStyle fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
+    classDef modelStyle fill:#1e1b4b,stroke:#a855f7,stroke-width:2px,color:#f8fafc;
+    classDef routingStyle fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#f8fafc;
+    classDef explainStyle fill:#451a03,stroke:#fbbf24,stroke-width:2px,color:#f8fafc;
+    classDef impactStyle fill:#172554,stroke:#60a5fa,stroke-width:3px,color:#ffffff,font-weight:bold;
+
+    subgraph INGESTION["1. Spatial & Temporal Data Layer"]
+        DB[("TimescaleDB + PostGIS")]:::dataStyle --> GEO["Geodesic Haversine Graph (W_ij)"]:::dataStyle
+        DB --> SERIES["14-Day Rolling Price & Arrival Windows"]:::dataStyle
     end
 
-    subgraph Phase 4: Neuro-Symbolic Explainability
-        D -->|GATv2 Attention & Saliency| I[Mathematical Attribution]
-        I --> J[Tavily Real-Time Context Engine]
-        J --> K[Groq Qwen3.8-27b Synthesizer]
-        K -->|Grounded Farmer Advisory| L((Transparent Adoption))
-        J -->|Bayesian Residual Gate| E
+    subgraph DEEP_LEARNING["2. Spatio-Temporal Forecasting (ST-GNN)"]
+        GEO & SERIES --> GNN["ST-GNN Architecture (TCN + GATv2 Attention)"]:::modelStyle
+        GNN --> FORECAST["7-Day Baseline Forecast (Crash / Stable / Spike)"]:::modelStyle
     end
+
+    subgraph GAME_THEORY["3. Game-Theoretic Routing Engine"]
+        FORECAST --> FW["Frank-Wolfe Convex Optimizer"]:::routingStyle
+        FW --> BUFFER["Anticipatory Rogue-Herder Buffer"]:::routingStyle
+        BUFFER --> WARDROP["Stochastic Wardrop User Equilibrium"]:::routingStyle
+    end
+
+    subgraph ADAPTIVE_XAI["4. Neuro-Symbolic XAI & Adaptive Disruption Shield"]
+        GNN -.->|Attention Weights & Saliency| XAI_ENGINE["GNN Mathematical Explainer"]:::explainStyle
+        XAI_ENGINE --> TAVILY["Tavily Real-Time Context Engine"]:::explainStyle
+        TAVILY --> GROQ["Groq Qwen 3.8 27B LPU Synthesizer"]:::explainStyle
+        GROQ --> ADVISORY["Actionable Farmer Advisory Bulletin"]:::explainStyle
+        TAVILY -.->|Flood / Strike Signals| GATE["Bayesian Residual Disruption Gate"]:::explainStyle
+        GATE ==>|Reroute Traffic & Overrule False Alarms| FW
+    end
+
+    subgraph OUTCOME["5. Macroeconomic Impact (Mesa Simulation)"]
+        WARDROP --> MESA["1,000 Autonomous Farmer Agents"]:::impactStyle
+        MESA --> STABILITY["60.95% Volatility Collapse (PDI: 0.74 -> 0.29)<br/>+53.67% Farmer Income Protected During Floods"]:::impactStyle
+    end
+```
+
+### Architecture Pipeline at a Glance
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        APMC NEURO-SYMBOLIC ROUTING ARCHITECTURE                        │
+├────────────────────────┬──────────────────────────┬────────────────────────────────────┤
+│   1. DATA & SPATIAL    │   2. DEEP LEARNING CORE  │      3. CONVEX OPTIMIZATION        │
+│   • TimescaleDB + PostGIS│   • 1D TCN Momentum Block│      • Frank-Wolfe Algorithm       │
+│   • Geodesic Graph (Wij) │   • GATv2Conv Attention  │      • Anticipatory Rogue Buffers  │
+│   • 14-Day Price History │   • Crash PR-AUC: 0.9256 │      • Latency: ~14ms per village  │
+├────────────────────────┴──────────────────────────┴────────────────────────────────────┤
+│                       4. EXPLAINABILITY & REAL-TIME DISRUPTION SHIELD                   │
+│   • GATv2 Mathematical Attribution (Top Neighbor Mandis & Salient Days in ~1,011ms)    │
+│   • Tavily Live News Engine (Localized Flood, Weather & Highway Disruptions)           │
+│   • Groq Qwen 3.8 27B LPU Synthesizer (Zero-Hallucination Farmer Advisories in ~656ms)  │
+│   • Bayesian Residual Gate (Overturns False Alarms & Reroutes Highway Traffic)         │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                          5. PROVEN MACROECONOMIC OUTCOMES                              │
+│   ▶ 60.95% Regional Volatility Drop (Price Dispersion Index collapses from 0.74 to 0.29)│
+│   ▶ +53.67% Farmer Profit Protected during Catastrophic Floods (Dynamic Rerouting)     │
+│   ▶ Daily Farmer Profit: -INR 2,338 (Herding Loss) ➔ +INR 8,692 (Explainable Guidance)  │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
