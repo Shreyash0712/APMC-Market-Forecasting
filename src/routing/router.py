@@ -43,40 +43,67 @@ class GameTheoreticRouter:
             return 0.030
         
     def generate_recommendation(self, mandi_names, predicted_prices, distances, 
-                              total_village_volume, baseline_capacities):
+                              total_village_volume, baseline_capacities,
+                              adherence_rate=1.0, disruptions=None):
         """
-        Calculates the Wardrop User Equilibrium for a group of farmers.
+        Calculates the Wardrop User Equilibrium with anticipatory compliance buffering
+        and real-time exogenous disruption impedance.
         
         Args:
-            mandi_names (list): Names of the candidate destination mandis.
-            predicted_prices (list/array): The AI's predicted price for each mandi (INR/tonne).
+            mandi_names (list): Names of candidate destination mandis.
+            predicted_prices (list/array): Predicted price for each mandi (INR/tonne).
             distances (list/array): Geodesic driving distances to each mandi (km).
             total_village_volume (float): Total tonnes of produce to route.
-            baseline_capacities (list/array): The organic daily capacity of each mandi.
+            baseline_capacities (list/array): Organic daily capacity of each mandi.
+            adherence_rate (float): Estimated fraction of farmers complying (0.0 to 1.0).
+            disruptions (dict): Optional {mandi_name: {'road_accessibility': float, 'supply_disruption': float}}.
             
         Returns:
-            dict: A mapping of {mandi_name: percentage_allocation}
+            dict: Mapping of {mandi_name: percentage_allocation} for compliant farmers.
         """
-        # Convert to numpy arrays for matrix math
-        predicted_prices = np.array(predicted_prices)
-        distances = np.array(distances)
-        baseline_capacities = np.array(baseline_capacities)
+        # Convert to numpy arrays
+        predicted_prices = np.array(predicted_prices, dtype=np.float64)
+        distances = np.array(distances, dtype=np.float64)
+        capacities = np.array(baseline_capacities, dtype=np.float64)
         
-        # Run Frank-Wolfe Optimization
+        # 1. Apply Exogenous Disruption Penalties (Road Accessibility & Floods)
+        if disruptions:
+            for i, name in enumerate(mandi_names):
+                if name in disruptions:
+                    d_info = disruptions[name]
+                    road_acc = float(d_info.get("road_accessibility", 1.0))
+                    # Scale distance inversely with road accessibility (submerged road = severe transit penalty)
+                    if road_acc < 1.0:
+                        distances[i] = distances[i] / max(0.05, road_acc)
+                        
+        # 2. Anticipatory Compliance Buffering (Shield against Rogue Herders)
+        effective_volume = total_village_volume
+        if adherence_rate < 1.0:
+            rogue_volume = total_village_volume * (1.0 - adherence_rate)
+            compliant_volume = total_village_volume * adherence_rate
+            
+            # Identify the target market that naive rogue herders will attack (highest raw price)
+            rogue_target_idx = int(np.argmax(predicted_prices))
+            
+            # Pre-deduct the rogue volume from that market's capacity buffer
+            capacities[rogue_target_idx] = max(10.0, capacities[rogue_target_idx] - rogue_volume)
+            effective_volume = compliant_volume
+
+        # 3. Run Frank-Wolfe Convex Optimization
         optimal_split = compute_wardrop_equilibrium(
             predicted_prices=predicted_prices,
             distances=distances,
-            total_village_volume=total_village_volume,
-            baseline_capacities=baseline_capacities,
+            total_village_volume=effective_volume,
+            baseline_capacities=capacities,
             apmc_fee_rate=self.state_fee_rate,
             max_iter=200,
             tol=1e-5
         )
         
-        # Format the output as a human-readable dictionary (rounding to 2 decimals)
+        # Format the output as a percentage allocation for compliant farmers
         routing_allocation = {}
         for i, name in enumerate(mandi_names):
-            if optimal_split[i] > 0.01: # Filter out mandis with near-zero allocations
+            if optimal_split[i] > 0.01:
                 routing_allocation[name] = round(float(optimal_split[i]) * 100, 2)
                 
         return routing_allocation

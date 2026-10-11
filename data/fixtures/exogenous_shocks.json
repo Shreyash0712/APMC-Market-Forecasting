@@ -1,0 +1,38 @@
+[
+  {
+    "scenario_id": "SHOCK_2023_JULY_FLOODS",
+    "name": "Catastrophic Monsoon Flood (Real 2023 Case)",
+    "target_mandi": "Nashik APMC",
+    "headline": "Torrential monsoon rains submerge 4,000 hectares of tomato nurseries in Nashik and Niphad; supply corridors to Mumbai and Delhi paralyzed.",
+    "supply_disruption_index": 0.85,
+    "road_accessibility_factor": 0.30,
+    "expected_market_effect": "Supply destruction prevents expected seasonal crash; prices remain elevated or stable."
+  },
+  {
+    "scenario_id": "SHOCK_DIESEL_HAULAGE_STRIKE",
+    "name": "Statewide Transporters Strike",
+    "target_mandi": "Pune APMC",
+    "headline": "Maharashtra Truck Drivers Association declares indefinite strike; tomato dispatches halted across 12 APMC yards.",
+    "supply_disruption_index": 0.65,
+    "road_accessibility_factor": 0.15,
+    "expected_market_effect": "Arrival gluts cannot reach terminal markets; localized crash at farm gates, but urban wholesale prices spike."
+  },
+  {
+    "scenario_id": "SHOCK_BUMPER_HARVEST_GLUT",
+    "name": "Favorable Climate / Bumper Crop Influx",
+    "target_mandi": "Pimpalgaon APMC",
+    "headline": "Optimal winter temperatures trigger early ripening; arrivals surge 140% above seasonal baseline across Western Maharashtra.",
+    "supply_disruption_index": -0.60,
+    "road_accessibility_factor": 1.00,
+    "expected_market_effect": "Massive supply influx amplifies crash probability; severe downward price pressure."
+  },
+  {
+    "scenario_id": "CONTROL_NORMAL_SEASON",
+    "name": "Standard Equilibrium Trading",
+    "target_mandi": "Pune APMC",
+    "headline": "Regular seasonal arrivals observed; transport freight rates steady and auctions proceeding normally.",
+    "supply_disruption_index": 0.00,
+    "road_accessibility_factor": 1.00,
+    "expected_market_effect": "No exogenous distortion; model relies purely on spatial-temporal momentum."
+  }
+]
